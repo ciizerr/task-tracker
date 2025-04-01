@@ -58,21 +58,23 @@ async function signOutUser() {
     window.location.reload();
 }
 
-// Show task input when logged in
+// Show task input and logout button when logged in
 auth.onAuthStateChanged((user) => {
     const authSection = document.getElementById("authSection");
     const taskSection = document.getElementById("taskSection");
+    const logoutBtn = document.getElementById("logoutBtn");
 
     if (user) {
-        authSection.style.display = "none";
-        taskSection.style.display = "block";
-        loadTasks(); // Load tasks for logged-in user
+        authSection.style.display = "none";  // Hide login form
+        taskSection.style.display = "block";  // Show task section
+        logoutBtn.style.display = "block";  // Show logout button
+        loadTasks();  // Load tasks for the logged-in user
     } else {
-        authSection.style.display = "block";
-        taskSection.style.display = "none";
+        authSection.style.display = "block";  // Show login form
+        taskSection.style.display = "none";  // Hide task section
+        logoutBtn.style.display = "none";  // Hide logout button
     }
 });
-
 
 // Function to add a new task (linked to user UID)
 async function addTask() {
