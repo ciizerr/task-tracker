@@ -110,19 +110,28 @@ async function loadTasks() {
     });
 }
 
-// Function to update task status
+// Function to update task status to "Completed"
 async function updateTask(taskId) {
-    const taskRef = doc(db, "tasks", taskId);
-    await updateDoc(taskRef, { status: "Completed" });
-    loadTasks();
+    const taskRef = doc(db, "tasks", auth.currentUser.uid, "taskList", taskId); // Include the UID and taskId
+    try {
+        await updateDoc(taskRef, { status: "Completed" });
+        loadTasks(); // Refresh the task list
+    } catch (error) {
+        console.error("Error updating task: ", error);
+    }
 }
 
 // Function to delete a task
 async function deleteTask(taskId) {
-    const taskRef = doc(db, "tasks", taskId);
-    await deleteDoc(taskRef);
-    loadTasks();
+    const taskRef = doc(db, "tasks", auth.currentUser.uid, "taskList", taskId); // Include the UID and taskId
+    try {
+        await deleteDoc(taskRef);
+        loadTasks(); // Refresh the task list
+    } catch (error) {
+        console.error("Error deleting task: ", error);
+    }
 }
+
 
 // Load tasks on page load
 window.onload = loadTasks;
