@@ -34,14 +34,29 @@
 
 <body>
     <h1>Task Tracker</h1>
-    <input type="text" id="taskInput" placeholder="Enter task">
-    <button onclick="addTask()">Add Task</button>
+
+    <!-- Authentication Section -->
+    <div id="authSection">
+        <h2>Login / Sign Up</h2>
+        <input type="email" id="emailInput" placeholder="Email">
+        <input type="password" id="passwordInput" placeholder="Password">
+        <button onclick="signUp()">Sign Up</button>
+        <button onclick="signIn()">Login</button>
+        <button onclick="signOutUser()">Log Out</button>
+    </div>
+
+    <!-- Task Input Section -->
+    <div id="taskSection">
+        <input type="text" id="taskInput" placeholder="Enter task">
+        <button onclick="addTask()">Add Task</button>
+    </div>
 
     <h2>Tasks</h2>
     <ul id="taskList"></ul>
 
     <script src="script.js" type="module"></script>
 </body>
+
 
 
 </html>
