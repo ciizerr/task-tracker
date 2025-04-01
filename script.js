@@ -58,23 +58,46 @@ async function signOutUser() {
     window.location.reload();
 }
 
-// Function to add a new task
+// Show task input when logged in
+auth.onAuthStateChanged((user) => {
+    const authSection = document.getElementById("authSection");
+    const taskSection = document.getElementById("taskSection");
+
+    if (user) {
+        authSection.style.display = "none";
+        taskSection.style.display = "block";
+        loadTasks(); // Load tasks for logged-in user
+    } else {
+        authSection.style.display = "block";
+        taskSection.style.display = "none";
+    }
+});
+
+
+// Function to add a new task (linked to user UID)
 async function addTask() {
     const taskInput = document.getElementById("taskInput").value;
     if (taskInput === "") return alert("Task cannot be empty!");
 
-    await addDoc(tasksCollection, { name: taskInput, status: "In Progress" });
+    const user = auth.currentUser;
+    if (!user) return alert("Please log in to add tasks!");
+
+    await addDoc(collection(db, "tasks", user.uid, "taskList"), { name: taskInput, status: "In Progress" });
 
     document.getElementById("taskInput").value = "";
     loadTasks(); // Refresh tasks
 }
 
-// Function to load tasks from Firestore
+// Function to load tasks for the logged-in user
 async function loadTasks() {
     const taskList = document.getElementById("taskList");
     taskList.innerHTML = ""; // Clear previous list
 
-    const querySnapshot = await getDocs(tasksCollection);
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const taskCollection = collection(db, "tasks", user.uid, "taskList");
+    const querySnapshot = await getDocs(taskCollection);
     querySnapshot.forEach((doc) => {
         const taskData = doc.data();
         const taskItem = document.createElement("li");
