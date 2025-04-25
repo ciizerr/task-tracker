@@ -6,58 +6,64 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Task Tracker</title>
     <link rel="stylesheet" href="style.css">
-    <script defer src="script.js"></script>
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
-        import { getAuth } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
-
-        // Your Firebase configuration
-        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-        const firebaseConfig = {
-            apiKey: "AIzaSyC3vUnHweEw4cQUYb80zv2-_aP4uemRIdg",
-            authDomain: "tasktracker-de513.firebaseapp.com",
-            projectId: "tasktracker-de513",
-            storageBucket: "tasktracker-de513.firebasestorage.app",
-            messagingSenderId: "131785072610",
-            appId: "1:131785072610:web:3ac50d06ca55a46238a3bb",
-            measurementId: "G-46CKMG13F2"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-    </script>
-</head>
+    </head>
 
 <body>
-    <h1>Task Tracker</h1>
+    <header>
+        <h1>Task Tracker</h1>
+        <div id="user-info" style="display: none;">
+            <span id="user-email"></span>
+            <button id="logoutBtn">Log Out</button>
+        </div>
+    </header>
 
-    <!-- Authentication Section -->
-    <div id="authSection">
-        <h2>Login / Sign Up</h2>
-        <input type="email" id="emailInput" placeholder="Email">
-        <input type="password" id="passwordInput" placeholder="Password">
-        <button onclick="signUp()">Sign Up</button>
-        <button onclick="signIn()">Login</button>
-        <button onclick="signOutUser()">Log Out</button>
-    </div>
+    <main>
+        <section id="authSection">
+            <h2>Login / Sign Up</h2>
+            <form id="auth-form">
+                <div class="form-group">
+                    <label for="emailInput">Email:</label>
+                    <input type="email" id="emailInput" placeholder="your@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="passwordInput">Password:</label>
+                    <input type="password" id="passwordInput" placeholder="Password" required minlength="6">
+                </div>
+                <div id="auth-message" class="message"></div>
+                <div class="button-group">
+                    <button type="button" id="signupBtn">Sign Up</button>
+                    <button type="button" id="loginBtn">Login</button>
+                    </div>
+            </form>
+        </section>
 
-    <!-- Task Input Section -->
-    <div id="taskSection">
-        <input type="text" id="taskInput" placeholder="Enter task">
-        <button onclick="addTask()">Add Task</button>
-        <button onclick="signOutUser()">Log Out</button>
-    </div>
+        <section id="taskManagementSection" style="display: none;">
+            <div id="taskSection">
+                <h2>Add New Task</h2>
+                <form id="task-form">
+                    <div class="form-group">
+                         <label for="taskInput">Task:</label>
+                         <input type="text" id="taskInput" placeholder="Enter task description" required>
+                    </div>
+                     <div id="task-message" class="message"></div>
+                    <button type="submit">Add Task</button>
+                </form>
+            </div>
 
-    <h2>Tasks</h2>
-    <ul id="taskList"></ul>
+            <div id="taskListSection">
+                <h2>Your Tasks</h2>
+                <div id="loading-indicator" style="display: none;">Loading tasks...</div>
+                <ul id="taskList">
+                    </ul>
+                 <p id="no-tasks-message" style="display: none;">You have no tasks yet!</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        </footer>
 
     <script src="script.js" type="module"></script>
+
 </body>
-
-
-
 </html>
