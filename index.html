@@ -1,69 +1,222 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Task Tracker</title>
     <link rel="stylesheet" href="style.css">
-    </head>
-
+    <style>
+        #taskManagementSection { display: none; }
+        #loading-indicator { display: none; }
+        #no-tasks-message { display: none; }
+        #user-info { display: none; }
+        .task-item {
+            background-color: #2c2c2cc1;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .task-actions button {
+            margin-left: 5px;
+            padding: 5px 8px;
+            cursor: pointer;
+            border: none;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        .complete-btn { background-color: #4CAF50; color: white; }
+        .edit-btn { background-color: #316cdb; color: white; }
+        .delete-btn { background-color: #eb5b50; color: white; }
+        .edit-input {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #555;
+            border-radius: 3px;
+            background-color: #33333394;
+            color: white;
+            margin-right: 10px;
+        }
+        .task-item.completed .task-name {
+            text-decoration: line-through;
+            color: #aaa;
+        }
+    </style>
+</head>
 <body>
+    <div class="background-animation">
+    </div>
+
     <header>
-        <h1>Task Tracker</h1>
-        <div id="user-info" style="display: none;">
-            <span id="user-email"></span>
-            <button id="logoutBtn">Log Out</button>
+        <div class="container">
+            <h1>Task Tracker</h1>
+            <nav>
+                <ul>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#benefits">Benefits</a></li>
+                    <li><a href="#testimonials">Testimonials</a></li>
+                    <li><a href="#signup">Sign Up</a></li>
+                    <li><a href="#login">Login</a></li>
+                </ul>
+            </nav>
+            <div id="user-info-header">
+                Logged in as: <span id="user-email"></span> <button id="logoutBtn">Logout</button>
+            </div>
         </div>
     </header>
 
-    <main>
-        <section id="authSection">
-            <h2>Login / Sign Up</h2>
-            <form id="auth-form">
-                <div class="form-group">
-                    <label for="emailInput">Email:</label>
-                    <input type="email" id="emailInput" placeholder="your@email.com" required>
+    <main id="landingPage">
+        <section id="hero">
+            <div class="container hero-content">
+                <h2>Organize Smarter, Live Better.</h2>
+                <p class="large-text">Unlock your potential with our intuitive task management platform.</p>
+                <div class="call-to-action">
+                    <button id="goToSignupHero">Get Started for Free</button>
+                    <button id="goToLoginHero">Already a Member?</button>
                 </div>
-                <div class="form-group">
-                    <label for="passwordInput">Password:</label>
-                    <input type="password" id="passwordInput" placeholder="Password" required minlength="6">
-                </div>
-                <div id="auth-message" class="message"></div>
-                <div class="button-group">
-                    <button type="button" id="signupBtn">Sign Up</button>
-                    <button type="button" id="loginBtn">Login</button>
-                    </div>
-            </form>
+            </div>
         </section>
 
-        <section id="taskManagementSection" style="display: none;">
-            <div id="taskSection">
-                <h2>Add New Task</h2>
-                <form id="task-form">
-                    <div class="form-group">
-                         <label for="taskInput">Task:</label>
-                         <input type="text" id="taskInput" placeholder="Enter task description" required>
+        <section id="features">
+            <div class="container">
+                <h2>Explore the Power of Task Tracker</h2>
+                <div class="grid-layout features-grid">
+                    <div class="feature-item">
+                        <i class="icon">✨</i>
+                        <h3>Intuitive Interface</h3>
+                        <p>Enjoy a clean and user-friendly experience across all devices.</p>
+                        <div class="hover-effect"></div>
                     </div>
-                     <div id="task-message" class="message"></div>
-                    <button type="submit">Add Task</button>
-                </form>
+                    <div class="feature-item">
+                        <i class="icon">📌</i>
+                        <h3>Seamless Task Management</h3>
+                        <p>Create, organize, and prioritize your tasks effortlessly.</p>
+                        <div class="hover-effect"></div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="icon">📈</i>
+                        <h3>Progress Visualization</h3>
+                        <p>Track your progress and stay motivated with visual insights.</p>
+                        <div class="hover-effect"></div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="icon">🔔</i>
+                        <h3>Smart Reminders</h3>
+                        <p>Never miss a deadline with customizable and timely reminders.</p>
+                        <div class="hover-effect"></div>
+                    </div>
+                </div>
             </div>
+        </section>
 
-            <div id="taskListSection">
-                <h2>Your Tasks</h2>
-                <div id="loading-indicator" style="display: none;">Loading tasks...</div>
-                <ul id="taskList">
-                    </ul>
-                 <p id="no-tasks-message" style="display: none;">You have no tasks yet!</p>
+        <section id="benefits">
+            <div class="container">
+                <h2>Why Task Tracker?</h2>
+                <div class="grid-layout benefits-grid">
+                    <div class="benefit-item">
+                        <h3>Boost Productivity</h3>
+                        <p class="large-text">Focus on what truly matters and achieve more in less time.</p>
+                        <div class="image-placeholder">
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <h3>Reduce Stress</h3>
+                        <p class="large-text">Organize your life and clear your mind from overwhelming to-dos.</p>
+                        <div class="image-placeholder">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="testimonials">
+            <div class="container">
+                <h2>Loved by Users Worldwide</h2>
+                <div class="carousel">
+                    <div class="testimonial">
+                        <p>"Task Tracker is a game-changer! It's so simple yet incredibly effective."</p>
+                        <p class="author">- Alex K.</p>
+                    </div>
+                    <div class="testimonial">
+                        <p>"Finally, a task manager that adapts to my workflow, not the other way around."</p>
+                        <p class="author">- Emily L.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="signup">
+            <div class="container auth-container">
+                <h2>Ready to Transform Your Productivity?</h2>
+                <form id="signup-form">
+                    <div class="form-group">
+                        <label for="signupEmail">Email:</label>
+                        <input type="email" id="signupEmail" placeholder="your@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPassword">Password:</label>
+                        <input type="password" id="signupPassword" placeholder="Create a strong password" required minlength="8">
+                    </div>
+                    <button type="submit" id="signupBtnLanding">Sign Up for Free</button>
+                    <div id="signup-message" class="message"></div>
+                </form>
+                <p class="login-link">Already have an account? <a href="#login" id="goToLoginSignupLink">Log In</a></p>
+            </div>
+        </section>
+
+        <section id="login" style="display: none;">
+            <div class="container auth-container">
+                <h2>Welcome Back!</h2>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="loginEmail">Email:</label>
+                        <input type="email" id="loginEmail" placeholder="your@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password:</label>
+                        <input type="password" id="loginPassword" placeholder="Your password" required>
+                    </div>
+                    <button type="submit" id="loginBtnLanding">Log In</button>
+                    <div id="login-message" class="message"></div>
+                </form>
+                <p class="signup-link">Don't have an account? <a href="#signup" id="goToSignupLoginLink">Sign Up</a></p>
             </div>
         </section>
     </main>
 
+    <section id="taskManagementSection">
+        <div class="container">
+            <h2>Your Tasks</h2>
+            
+            <form id="task-form" class="task-input-area">
+                <div class="input-group">
+                    <label for="taskInput" class="visually-hidden">Add New Task</label>
+                    <input type="text" id="taskInput" placeholder="What do you need to do?" required>
+                    <label for="dueDate" class="visually-hidden">Due Date (Optional)</label>
+                    <input type="date" id="dueDate">
+                </div>
+                <button type="submit" class="add-task-button">Add Task</button>
+                <div id="task-message" class="message"></div>
+            </form>
+            <div id="loading-indicator">Loading tasks...</div>
+            <div id="no-tasks-message">No tasks yet. Add some!</div>
+            <ul id="taskList">
+                </ul>
+        </div>
+    </section>
+
     <footer>
-        </footer>
+        <div class="container">
+            <p>&copy; 2025 Task Tracker. All rights reserved.</p>
+            <ul>
+                <li><a href="https://youtu.be/Cbus9b1OlBc?si=3tcCMOlXk8iQFxQQ">Privacy Policy</a></li>
+                <li><a href="https://www.youtube.com/watch?v=G1-VEnkNT_Y" target="_top">Terms of Service</a></li>
+            </ul>
+        </div>
+    </footer>
 
     <script src="script.js" type="module"></script>
-
 </body>
 </html>

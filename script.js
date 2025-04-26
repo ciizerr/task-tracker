@@ -1,17 +1,13 @@
 // Import necessary functions from the Firebase SDK
-// Make sure you have installed Firebase: npm install firebase
-// Or are using the script tags in HTML for ES Modules
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
 import {
-    getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, where, orderBy, serverTimestamp, Timestamp // Added Timestamp
+    getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, where, orderBy, serverTimestamp, Timestamp
 } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 import {
-    getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail // Added password reset
+    getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
 
 // --- IMPORTANT: Firebase Configuration ---
-// REPLACE THIS with your actual Firebase project configuration.
-// CONSIDER USING ENVIRONMENT VARIABLES for security. DO NOT commit keys to Git.
 const firebaseConfig = {
     apiKey: "AIzaSyC3vUnHweEw4cQUYb80zv2-_aP4uemRIdg",
     authDomain: "tasktracker-de513.firebaseapp.com",
@@ -27,35 +23,33 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// --- Firestore Security Rules Reminder ---
-// In your Firebase Console -> Firestore Database -> Rules, set rules like this
-// to ensure users can only access their own tasks:
-/*
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Allow users to read, write, update, delete only their own tasks
-    match /tasks/{userId}/{document=**} { // Allows access to subcollections too
-      allow read, write, update, delete: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
-*/
+// --- DOM Element References (UPDATED FOR NEW HTML) ---
+const headerNav = document.querySelector('header nav');
+const goToSignupHeroBtn = document.getElementById('goToSignupHero');
+const goToLoginHeroBtn = document.getElementById('goToLoginHero');
+const goToLoginSignupLink = document.getElementById('goToLoginSignupLink');
+const goToSignupLoginLink = document.getElementById('goToSignupLoginLink');
 
-// --- DOM Element References ---
-const authSection = document.getElementById('authSection');
+const signupSection = document.getElementById('signup');
+const loginSection = document.getElementById('login');
+const authSection = document.getElementById('authSection'); // May not be directly used now
 const taskManagementSection = document.getElementById('taskManagementSection');
-const authForm = document.getElementById('auth-form');
-const emailInput = document.getElementById('emailInput');
-const passwordInput = document.getElementById('passwordInput');
-const signupBtn = document.getElementById('signupBtn');
-const loginBtn = document.getElementById('loginBtn');
-// const resetPasswordBtn = document.getElementById('resetPasswordBtn'); // Uncomment if using
-const logoutBtn = document.getElementById('logoutBtn');
-const authMessage = document.getElementById('auth-message');
 
+const signupForm = document.getElementById('signup-form');
+const loginForm = document.getElementById('login-form');
+const signupEmailInput = document.getElementById('signupEmail');
+const signupPasswordInput = document.getElementById('signupPassword');
+const loginEmailInput = document.getElementById('loginEmail');
+const loginPasswordInput = document.getElementById('loginPassword');
+const signupBtnLanding = document.getElementById('signupBtnLanding');
+const loginBtnLanding = document.getElementById('loginBtnLanding');
+
+const logoutBtn = document.getElementById('logoutBtn');
+const signupMessage = document.getElementById('signup-message');
+const loginMessage = document.getElementById('login-message');
 const taskForm = document.getElementById('task-form');
 const taskInput = document.getElementById('taskInput');
+const dueDateInput = document.getElementById('dueDate'); // ADD THIS LINE
 const taskList = document.getElementById('taskList');
 const taskMessage = document.getElementById('task-message');
 const loadingIndicator = document.getElementById('loading-indicator');
@@ -63,13 +57,14 @@ const noTasksMessage = document.getElementById('no-tasks-message');
 const userInfo = document.getElementById('user-info');
 const userEmailSpan = document.getElementById('user-email');
 
+
+
 let currentUserId = null; // Store the current user's ID
 
 // --- Helper Functions ---
 function showMessage(element, message, isError = false) {
     element.textContent = message;
     element.className = 'message ' + (isError ? 'error' : 'success');
-    // Auto-hide message after some time (optional)
     setTimeout(() => { element.textContent = ''; element.className = 'message'; }, 5000);
 }
 
@@ -82,120 +77,136 @@ function showLoading(show) {
     loadingIndicator.style.display = show ? 'block' : 'none';
 }
 
-function toggleSections(isLoggedIn) {
+function toggleAuthVisibility(showLogin = false) {
+    signupSection.style.display = showLogin ? 'none' : 'block';
+    loginSection.style.display = showLogin ? 'block' : 'none';
+    window.location.hash = showLogin ? 'login' : 'signup';
+}
+
+function toggleTaskManagementSection(isLoggedIn) {
     if (isLoggedIn) {
-        authSection.style.display = 'none';
+        document.getElementById('landingPage').style.display = 'none';
+        signupSection.style.display = 'none';
+        loginSection.style.display = 'none';
         taskManagementSection.style.display = 'block';
-        userInfo.style.display = 'block';
-        userEmailSpan.textContent = auth.currentUser.email; // Display user email
+        // userInfo.style.display = 'block'; // No longer using this ID
+        const userInfoHeader = document.getElementById('user-info-header');
+        if (userInfoHeader) {
+            userInfoHeader.style.display = 'flex'; // Show user info in header
+        }
+        userEmailSpan.textContent = auth.currentUser.email;
+        loadTasks();
+        if (headerNav) {
+            headerNav.style.display = 'none'; // Hide header nav on login
+        }
     } else {
-        authSection.style.display = 'block';
+        document.getElementById('landingPage').style.display = 'block';
+        signupSection.style.display = 'none';
+        loginSection.style.display = 'none';
         taskManagementSection.style.display = 'none';
-        userInfo.style.display = 'none';
+        // userInfo.style.display = 'none'; // No longer using this ID
+        const userInfoHeader = document.getElementById('user-info-header');
+        if (userInfoHeader) {
+            userInfoHeader.style.display = 'none'; // Hide user info in header
+        }
         userEmailSpan.textContent = '';
-        taskList.innerHTML = ''; // Clear tasks on logout
+        taskList.innerHTML = '';
         currentUserId = null;
-        clearMessage(authMessage);
+        clearMessage(signupMessage);
+        clearMessage(loginMessage);
         clearMessage(taskMessage);
+        if (headerNav) {
+            headerNav.style.display = 'block'; // Show header nav on logout
+        }
     }
 }
 
+// Also, ensure that the initial state on page load is set correctly:
+document.addEventListener('DOMContentLoaded', () => {
+    // ... other DOMContentLoaded code ...
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            console.log("User logged in:", user.uid, user.email);
+            currentUserId = user.uid;
+            toggleTaskManagementSection(true); // Show task management
+        } else {
+            console.log("User logged out");
+            currentUserId = null;
+            toggleTaskManagementSection(false); // Show landing page
+        }
+    });
+    // ... rest of DOMContentLoaded code ...
+});
 // --- Authentication Functions ---
 async function handleSignUp(e) {
-    e.preventDefault(); // Prevent default form submission if using forms
-    clearMessage(authMessage);
-    const email = emailInput.value;
-    const password = passwordInput.value;
+    e.preventDefault();
+    clearMessage(signupMessage);
+    const email = signupEmailInput.value;
+    const password = signupPasswordInput.value;
     if (!email || !password) {
-        showMessage(authMessage, "Please enter email and password.", true);
+        showMessage(signupMessage, "Please enter email and password.", true);
         return;
     }
     try {
         await createUserWithEmailAndPassword(auth, email, password);
-        // No need to reload, onAuthStateChanged will handle UI update
-        showMessage(authMessage, "Sign up successful! You are now logged in.", false);
-        // Clear form fields after successful signup
-        authForm.reset();
+        showMessage(signupMessage, "Sign up successful! You are now logged in.", false);
+        signupForm.reset();
+        // onAuthStateChanged will handle UI update
     } catch (error) {
         console.error("Sign up error:", error);
-        showMessage(authMessage, `Sign up failed: ${error.message}`, true);
+        showMessage(signupMessage, `Sign up failed: ${error.message}`, true);
     }
 }
 
 async function handleSignIn(e) {
-    e.preventDefault(); // Prevent default form submission if using forms
-    clearMessage(authMessage);
-    const email = emailInput.value;
-    const password = passwordInput.value;
+    e.preventDefault();
+    clearMessage(loginMessage);
+    const email = loginEmailInput.value;
+    const password = loginPasswordInput.value;
     if (!email || !password) {
-        showMessage(authMessage, "Please enter email and password.", true);
+        showMessage(loginMessage, "Please enter email and password.", true);
         return;
     }
     try {
         await signInWithEmailAndPassword(auth, email, password);
-        // No need to reload, onAuthStateChanged will handle UI update
-        showMessage(authMessage, "Login successful!", false);
-         // Clear form fields after successful login
-        authForm.reset();
+        showMessage(loginMessage, "Login successful!", false);
+        loginForm.reset();
+        // onAuthStateChanged will handle UI update
     } catch (error) {
         console.error("Sign in error:", error);
-        showMessage(authMessage, `Login failed: ${error.message}`, true);
+        showMessage(loginMessage, `Login failed: ${error.message}`, true);
     }
 }
 
 async function handleSignOut() {
-    clearMessage(authMessage);
     try {
         await signOut(auth);
-        // No need to reload, onAuthStateChanged will handle UI update
-        // Maybe show a success message briefly on the login form
-        // showMessage(authMessage, "Logged out successfully.", false);
         console.log("User signed out");
+        toggleTaskManagementSection(false); // Show landing page on logout
     } catch (error) {
         console.error("Sign out error:", error);
-        showMessage(authMessage, `Logout failed: ${error.message}`, true);
+        showMessage(taskMessage, `Logout failed: ${error.message}`, true);
     }
 }
-
- // Optional: Password Reset
-async function handlePasswordReset() {
-    clearMessage(authMessage);
-    const email = emailInput.value;
-    if (!email) {
-        showMessage(authMessage, "Please enter your email address to reset password.", true);
-        return;
-    }
-    try {
-        await sendPasswordResetEmail(auth, email);
-        showMessage(authMessage, "Password reset email sent! Check your inbox.", false);
-    } catch (error) {
-        console.error("Password reset error:", error);
-        showMessage(authMessage, `Password reset failed: ${error.message}`, true);
-    }
-}
-
 
 // --- Task Functions ---
-
-// Get reference to the user's specific task collection
 function getUserTasksCollectionRef() {
     if (!currentUserId) return null;
-    // Use collection(db, 'parentCollection', 'documentId', 'subCollection')
     return collection(db, "tasks", currentUserId, "userTasks");
 }
 
-// Add a new task
 async function handleAddTask(e) {
-    e.preventDefault(); // Prevent default form submission
+    e.preventDefault();
     clearMessage(taskMessage);
     const taskName = taskInput.value.trim();
+    const dueDate = dueDateInput.value; // Get the value of the due date input
 
     if (taskName === "") {
         showMessage(taskMessage, "Task description cannot be empty!", true);
         return;
     }
     if (!currentUserId) {
-         showMessage(taskMessage, "You must be logged in to add tasks.", true);
+        showMessage(taskMessage, "You must be logged in to add tasks.", true);
         return;
     }
 
@@ -205,39 +216,39 @@ async function handleAddTask(e) {
     try {
         await addDoc(tasksCollectionRef, {
             name: taskName,
-            status: "In Progress", // 'In Progress' or 'Completed'
-            createdAt: serverTimestamp() // Add a timestamp
+            dueDate: dueDate, // Save the due date to Firebase
+            status: "In Progress",
+            createdAt: serverTimestamp()
         });
         showMessage(taskMessage, "Task added successfully!", false);
-        taskInput.value = ""; // Clear input field
-        loadTasks(); // Refresh tasks list
+        taskInput.value = "";
+        dueDateInput.value = ""; // Clear the due date input after adding
+        loadTasks();
     } catch (error) {
         console.error("Error adding task: ", error);
         showMessage(taskMessage, `Error adding task: ${error.message}`, true);
     }
 }
 
-// Load and display tasks for the current user
 async function loadTasks() {
     if (!currentUserId) {
-        taskList.innerHTML = ''; // Clear list if no user
+        taskList.innerHTML = '';
         return;
     }
 
     const tasksCollectionRef = getUserTasksCollectionRef();
-     if (!tasksCollectionRef) return;
+    if (!tasksCollectionRef) return;
 
     showLoading(true);
-    taskList.innerHTML = ""; // Clear previous list
-    noTasksMessage.style.display = 'none'; // Hide 'no tasks' message initially
+    taskList.innerHTML = "";
+    noTasksMessage.style.display = 'none';
 
     try {
-        // Optional: Query to order tasks, e.g., by creation date
-        const q = query(tasksCollectionRef, orderBy("createdAt", "desc")); // Show newest first
+        const q = query(tasksCollectionRef, orderBy("createdAt", "desc"));
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-             noTasksMessage.style.display = 'block'; // Show 'no tasks' message
+            noTasksMessage.style.display = 'block';
         } else {
             querySnapshot.forEach((doc) => {
                 renderTaskItem(doc.id, doc.data());
@@ -252,23 +263,27 @@ async function loadTasks() {
     }
 }
 
-// Render a single task item in the list
 function renderTaskItem(id, taskData) {
     const taskItem = document.createElement("li");
     taskItem.classList.add("task-item");
-    taskItem.dataset.id = id; // Store task ID on the element
+    taskItem.dataset.id = id;
     if (taskData.status === "Completed") {
         taskItem.classList.add("completed");
     }
 
-    // Format timestamp if it exists
     let dateString = '';
     if (taskData.createdAt && taskData.createdAt instanceof Timestamp) {
         dateString = taskData.createdAt.toDate().toLocaleDateString();
     }
 
+    let dueDateDisplay = '';
+    if (taskData.dueDate) {
+        dueDateDisplay = `<span class="due-date">Due: ${taskData.dueDate}</span>`;
+    }
+
     taskItem.innerHTML = `
         <span class="task-name">${taskData.name} ${dateString ? '('+dateString+')' : ''}</span>
+        ${dueDateDisplay}
         <div class="task-actions">
             <button class="complete-btn">${taskData.status === "Completed" ? '🔄 Reopen' : '✅ Complete'}</button>
             <button class="edit-btn">✏️ Edit</button>
@@ -276,94 +291,68 @@ function renderTaskItem(id, taskData) {
         </div>
     `;
 
-    // Add event listeners using event delegation (better for performance)
-    // Handled by the main taskList event listener below
-
     taskList.appendChild(taskItem);
 }
 
-
-// --- Event Delegation for Task Actions ---
 taskList.addEventListener('click', async (e) => {
     const target = e.target;
-    const taskItem = target.closest('.task-item'); // Find parent task item
-    if (!taskItem) return; // Clicked outside a task item action
+    const taskItem = target.closest('.task-item');
+    if (!taskItem) return;
 
     const taskId = taskItem.dataset.id;
     if (!currentUserId || !taskId) return;
 
     const taskDocRef = doc(db, "tasks", currentUserId, "userTasks", taskId);
 
-    // Handle Complete/Reopen button
     if (target.classList.contains('complete-btn')) {
         const currentStatus = taskItem.classList.contains('completed') ? "Completed" : "In Progress";
         const newStatus = currentStatus === "Completed" ? "In Progress" : "Completed";
         try {
             await updateDoc(taskDocRef, { status: newStatus });
-            loadTasks(); // Refresh list to show updated status/button text
+            loadTasks();
         } catch (error) {
             console.error("Error updating task status: ", error);
             showMessage(taskMessage, `Error updating status: ${error.message}`, true);
         }
-    }
-
-    // Handle Delete button
-    else if (target.classList.contains('delete-btn')) {
-        if (confirm("Are you sure you want to delete this task?")) { // Confirmation dialog
-             try {
+    } else if (target.classList.contains('delete-btn')) {
+        if (confirm("Are you sure you want to delete this task?")) {
+            try {
                 await deleteDoc(taskDocRef);
-                // taskItem.remove(); // Or reload list
-                loadTasks(); // Refresh list
+                loadTasks();
                 showMessage(taskMessage, "Task deleted.", false);
             } catch (error) {
                 console.error("Error deleting task: ", error);
                 showMessage(taskMessage, `Error deleting task: ${error.message}`, true);
             }
         }
-    }
-
-    // Handle Edit button
-    else if (target.classList.contains('edit-btn')) {
+    } else if (target.classList.contains('edit-btn')) {
         handleEditTask(taskItem);
-    }
-
-     // Handle Save button (appears during edit)
-    else if (target.classList.contains('save-btn')) {
+    } else if (target.classList.contains('save-btn')) {
         handleSaveTask(taskItem, taskDocRef);
-    }
-
-    // Handle Cancel button (appears during edit)
-    else if (target.classList.contains('cancel-btn')) {
-       loadTasks(); // Simple way to cancel: just reload the list
+    } else if (target.classList.contains('cancel-btn')) {
+        loadTasks();
     }
 });
 
-
-// --- Edit Task Specific Functions ---
-
-// Switch task item to edit mode
 function handleEditTask(taskItem) {
     const taskNameSpan = taskItem.querySelector('.task-name');
     const actionsDiv = taskItem.querySelector('.task-actions');
-    const currentName = taskNameSpan.textContent.split('(')[0].trim(); // Get name part only
+    const currentName = taskNameSpan.textContent.split('(')[0].trim();
 
-    // Replace name span with input field
-    taskNameSpan.style.display = 'none'; // Hide the original span
+    taskNameSpan.style.display = 'none';
     const input = document.createElement('input');
     input.type = 'text';
     input.value = currentName;
     input.classList.add('edit-input');
-    taskItem.insertBefore(input, actionsDiv); // Insert input before actions
+    taskItem.insertBefore(input, actionsDiv);
 
-    // Change buttons to Save/Cancel
     actionsDiv.innerHTML = `
         <button class="save-btn">💾 Save</button>
         <button class="cancel-btn">❌ Cancel</button>
     `;
-    input.focus(); // Focus the input field
+    input.focus();
 }
 
-// Save edited task name
 async function handleSaveTask(taskItem, taskDocRef) {
     const input = taskItem.querySelector('.edit-input');
     const newName = input.value.trim();
@@ -376,38 +365,69 @@ async function handleSaveTask(taskItem, taskDocRef) {
 
     try {
         await updateDoc(taskDocRef, { name: newName });
-        loadTasks(); // Refresh list to show changes
+        loadTasks();
         showMessage(taskMessage, "Task updated successfully!", false);
     } catch (error) {
         console.error("Error saving task: ", error);
         showMessage(taskMessage, `Error saving task: ${error.message}`, true);
-         // Optionally revert UI changes or just reload
         loadTasks();
     }
 }
-
 
 // --- Authentication State Observer ---
 onAuthStateChanged(auth, (user) => {
     if (user) {
         // User is signed in
         console.log("User logged in:", user.uid, user.email);
-        currentUserId = user.uid; // Set the global currentUserId
-        toggleSections(true); // Show task sections, hide auth
-        loadTasks(); // Load tasks for the logged-in user
+        currentUserId = user.uid;
+        toggleTaskManagementSection(true); // Show task management
     } else {
         // User is signed out
         console.log("User logged out");
         currentUserId = null;
-        toggleSections(false); // Show auth section, hide tasks
+        toggleTaskManagementSection(false); // Show landing page
     }
 });
 
-// --- Initial Event Listeners Setup ---
-signupBtn.addEventListener('click', handleSignUp);
-loginBtn.addEventListener('click', handleSignIn);
-logoutBtn.addEventListener('click', handleSignOut);
-taskForm.addEventListener('submit', handleAddTask);
-// resetPasswordBtn.addEventListener('click', handlePasswordReset); // Uncomment if using
+// --- Event Listeners Setup (UPDATED FOR NEW HTML) ---
+document.addEventListener('DOMContentLoaded', () => {
+    if (goToSignupHeroBtn) {
+        goToSignupHeroBtn.addEventListener('click', () => toggleAuthVisibility(false));
+    }
+    if (goToLoginHeroBtn) {
+        goToLoginHeroBtn.addEventListener('click', () => toggleAuthVisibility(true));
+    }
+    if (goToLoginSignupLink) {
+        goToLoginSignupLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleAuthVisibility(true);
+        });
+    }
+    if (goToSignupLoginLink) {
+        goToSignupLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleAuthVisibility(false);
+        });
+    }
+    if (signupForm) {
+        signupForm.addEventListener('submit', handleSignUp);
+    }
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleSignIn);
+    }
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', handleSignOut);
+    }
+    if (taskForm) {
+        taskForm.addEventListener('submit', handleAddTask);
+    }
 
-console.log("Task Tracker script loaded."); // For debugging
+    // Optional: Check URL hash on load (moved inside DOMContentLoaded)
+    if (window.location.hash === '#login') {
+        toggleAuthVisibility(true);
+    } else if (window.location.hash === '#signup') {
+        toggleAuthVisibility(false);
+    }
+});
+
+console.log("Task Tracker script loaded.");
